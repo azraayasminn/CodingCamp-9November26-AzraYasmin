@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Expense & Budget Visualizer</title>
+
+  <!-- Prevent theme flash: set theme before body renders -->
+  <script>
+    (function () {
+      var saved = localStorage.getItem('ebv_theme');
+      var theme = saved === 'light' || saved === 'dark'
+        ? saved
+        : (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+            ? 'dark' : 'light');
+      document.documentElement.setAttribute('data-theme', theme);
+    })();
+  </script>
+
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Chart.js via CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+
+  <!-- App styles -->
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <main class="app">
+
+    <!-- ===== Header ===== -->
+    <header class="app-header">
+      <div class="header-title">
+        <span class="header-logo" aria-hidden="true">💸</span>
+        <h1>Expense Visualizer</h1>
+      </div>
+      <button id="themeToggle" class="theme-toggle" aria-label="Toggle dark mode">
+        <!-- Moon icon (light mode → click for dark) -->
+        <svg class="icon-moon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        <!-- Sun icon (dark mode → click for light) -->
+        <svg class="icon-sun" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="M4.93 4.93l1.41 1.41"/><path d="M17.66 17.66l1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="M6.34 17.66l-1.41 1.41"/><path d="M19.07 4.93l-1.41 1.41"/></svg>
+      </button>
+    </header>
+
+    <!-- ===== Balance Card ===== -->
+    <section class="balance-card" id="balanceCard" aria-live="polite">
+      <p class="balance-label">Total Balance</p>
+      <p id="totalBalance" class="balance-amount">Rp 0,00</p>
+      <p id="balanceWarning" class="balance-warning" hidden></p>
+    </section>
+
+    <!-- ===== Form + Spending Limit (two columns on desktop) ===== -->
+    <div class="top-grid">
+      <section class="card">
+        <h2 class="card-title">Add Transaction</h2>
+        <form id="expenseForm" class="expense-form" novalidate>
+          <div class="form-group">
+            <label for="itemName" class="form-label">Item Name</label>
+            <input type="text" id="itemName" placeholder="e.g. Lunch at cafe" autocomplete="off">
+            <span class="error-msg" id="nameError" role="alert"></span>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="amount" class="form-label">Amount</label>
+              <input type="number" id="amount" placeholder="e.g. 25000" min="0" step="0.01">
+              <span class="error-msg" id="amountError" role="alert"></span>
+            </div>
+            <div class="form-group">
+              <label for="category" class="form-label">Category</label>
+              <select id="category">
+                <option value="">Select…</option>
+                <option value="Food">Food</option>
+                <option value="Transport">Transport</option>
+                <option value="Fun">Fun</option>
+              </select>
+              <span class="error-msg" id="categoryError" role="alert"></span>
+            </div>
+          </div>
+          <button type="submit" class="btn-primary">Add Transaction</button>
+        </form>
+      </section>
+
+      <section class="card limit-card">
+        <h2 class="card-title">Spending Limit</h2>
+        <input type="number" id="spendingLimit" placeholder="e.g. 100000" min="0" step="0.01" aria-label="Spending limit amount">
+        <p class="limit-hint">Transactions above this limit will be highlighted in red.</p>
+      </section>
+    </div>
+
+    <!-- ===== Dashboard: Chart + List (two columns on desktop) ===== -->
+    <div class="dashboard-grid">
+      <section class="card">
+        <h2 class="card-title">Expenses by Category</h2>
+        <div class="chart-wrapper" id="chartWrapper">
+          <canvas id="pieChart"></canvas>
+        </div>
+        <div id="chartEmpty" class="empty-state" hidden>
+          <span class="empty-icon" aria-hidden="true">📊</span>
+          <span>No expenses to display yet.</span>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="list-header">
+          <h2 class="card-title">Transactions</h2>
+          <select id="sortBy" class="sort-select" aria-label="Sort transactions">
+            <option value="newest">Newest</option>
+            <option value="oldest">Oldest</option>
+            <option value="amountDesc">Highest Amount</option>
+            <option value="amountAsc">Lowest Amount</option>
+            <option value="category">Category A-Z</option>
+          </select>
+        </div>
+        <div id="transactionList" class="transaction-list"></div>
+        <div id="listEmpty" class="empty-state" hidden>
+          <span class="empty-icon" aria-hidden="true">📝</span>
+          <span>No transactions yet. Add one above!</span>
+        </div>
+      </section>
+    </div>
+
+  </main>
+
+  <script src="js/script.js"></script>
+</body>
+</html>
